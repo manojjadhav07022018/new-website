@@ -12,18 +12,16 @@
 
 <div id="map"></div>
 
-<!-- Side control panel -->
+<!-- Side panel with inputs for routing -->
 <div class="side-panel">
     <h1>OpenStreetMap Navigation</h1>
+    
     <div class="location-input">
-        <input type="text" id="location" placeholder="Enter Location" />
-        <button onclick="getWeather()">Get Weather & Location</button>
+        <input type="text" id="location" placeholder="Enter Starting Location" />
     </div>
-
-    <div class="distance-section">
+    
+    <div class="destination-input">
         <input type="text" id="destination" placeholder="Enter Destination" />
-        <button onclick="calculateDistance()">Calculate Distance</button>
-        <div id="distanceResult"></div>
     </div>
 
     <div class="transport-section">
@@ -32,11 +30,13 @@
             <option value="car">Car</option>
             <option value="bike">Bike</option>
             <option value="walk">Walk</option>
-            <option value="publicTransport">Public Transport</option>
         </select>
     </div>
 
     <button onclick="getUserLocation()">Use My Location</button>
+    <button onclick="calculateRoute()">Get Route</button>
+
+    <div id="distanceResult"></div>
 </div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
