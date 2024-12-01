@@ -3,32 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Google Maps Navigation</title>
+    <title>Professional Navigation System</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Leaflet CSS for Map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.1/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css"/>
+    
+    <!-- Custom Styles -->
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-    <!-- Sidebar for location input and navigation settings -->
-    <div class="sidebar">
-        <h3>Google Maps Navigation</h3>
-        <input type="text" id="start" placeholder="Enter starting location" />
-        <input type="text" id="end" placeholder="Enter destination location" />
-        <select id="mode" onchange="changeTravelMode()">
+<!-- Navigation Sidebar for inputs and weather info -->
+<div class="sidebar p-4 bg-light shadow rounded">
+    <h3 class="text-center mb-4">Navigation System</h3>
+
+    <!-- Start and End Location -->
+    <div class="form-group">
+        <label for="start">Start Location</label>
+        <input type="text" id="start" class="form-control" placeholder="Enter start location">
+    </div>
+    <div class="form-group">
+        <label for="end">End Location</label>
+        <input type="text" id="end" class="form-control" placeholder="Enter end location">
+    </div>
+
+    <!-- Travel Mode Dropdown -->
+    <div class="form-group">
+        <label for="mode">Travel Mode</label>
+        <select id="mode" class="form-control">
             <option value="DRIVING">Car</option>
             <option value="WALKING">Walking</option>
             <option value="BICYCLING">Bicycle</option>
             <option value="TRANSIT">Public Transport</option>
         </select>
-        <button onclick="calculateRoute()">Get Route</button>
-        <button onclick="geolocateUser()">Use My Location</button>
     </div>
 
-    <!-- Google Maps container -->
-    <div id="map"></div>
+    <!-- Buttons to Calculate Route and Geolocate User -->
+    <div class="form-group">
+        <button onclick="calculateRoute()" class="btn btn-primary btn-block">Get Route</button>
+    </div>
+    <div class="form-group">
+        <button onclick="geolocateUser()" class="btn btn-secondary btn-block">Use My Location</button>
+    </div>
+    
+    <!-- Weather Information -->
+    <h5 class="mt-4">Weather Info</h5>
+    <div id="weather" class="text-muted"></div>
+</div>
 
-    <!-- Google Maps API -->
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD_KIiTj8cERonxJdqOXtOTtGuuon2c8RQ&callback=initMap" async defer></script>
-    <script src="script.js"></script>
+<!-- Map Container -->
+<div id="map" style="height: 100vh;"></div>
 
+<!-- Include OpenCage API and OpenWeather API -->
+<script src="https://api.opencagedata.com/geocode/v1/json?q=London&key=c34e29c1c3cb4633839af7cf72ab224e"></script>
+<script src="https://api.openweathermap.org/data/2.5/weather?q=London&appid=8b12ac433523f9f24fba9932331ca42e"></script>
+
+<!-- Leaflet and Leaflet Routing Machine Scripts -->
+<script src="https://unpkg.com/leaflet@1.9.1/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+
+<script src="script.js"></script>
 </body>
 </html>
