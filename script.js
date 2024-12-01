@@ -1,7 +1,6 @@
 const OPEN_CAGE_API_KEY = 'c34e29c1c3cb4633839af7cf72ab224e';  // OpenCage API Key for location
 const OPEN_WEATHER_API_KEY = '8b12ac433523f9f24fba9932331ca42e';  // OpenWeather API Key for weather
 
-// Initialize the map using Leaflet
 let map = L.map('map').setView([51.505, -0.09], 13);
 
 // Add OpenStreetMap tile layer
@@ -9,11 +8,13 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 }).addTo(map);
 
-// Initialize the routing control
 let routeControl = L.Routing.control({
     waypoints: [],
     routeWhileDragging: true
 }).addTo(map);
+
+// Default mode: car
+let routeMode = 'car';
 
 // Function to get weather and location information
 async function getWeather() {
@@ -63,6 +64,36 @@ async function getWeather() {
 
     // Update the routing control with the new location as a starting point
     routeControl.spliceWaypoints(0, 1, L.latLng(lat, lng));
+}
+
+// Function to change transport mode
+function changeTransportMode() {
+    routeMode = document.getElementById('transportMode').value;
+    updateRoute();
+}
+
+// Function to update route based on the selected mode of transport
+function updateRoute() {
+    // Define the available routing profiles for car, bike, walk
+    let routeProfiles = {
+        'car': 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        'bike': 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        'walk': 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    };
+
+    // Clear existing waypoints
+    routeControl.setWaypoints([]);
+
+    // If the mode is car, bike, or walk, we add routing
+    if (routeMode === 'car' || routeMode === 'bike' || routeMode === 'walk') {
+        L.Routing.control({
+            waypoints: [L.latLng(51.505, -0.09), L.latLng(51.515, -0.1)],
+            router: L.Routing.osrmv1({
+                profile: routeMode
+            }),
+            routeWhileDragging: true
+        }).addTo(map);
+    }
 }
 
 // Function to calculate distance between two locations
