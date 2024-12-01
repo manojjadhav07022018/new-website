@@ -1,17 +1,18 @@
-/* General body and map styling */
+/* Reset body margin and padding */
 body, html {
     height: 100%;
     margin: 0;
     padding: 0;
+    font-family: 'Roboto', sans-serif;
 }
 
-/* Map container styling */
+/* Full height for the map */
 #map {
     height: 100%;
     width: 100%;
 }
 
-/* Sidebar container */
+/* Sidebar for input and settings */
 .sidebar {
     position: absolute;
     top: 20px;
@@ -22,25 +23,81 @@ body, html {
     width: 300px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
     z-index: 1;
+    font-family: 'Arial', sans-serif;
+    box-sizing: border-box;
+    background-color: rgba(255, 255, 255, 0.9);
 }
 
-/* Input and button styling in sidebar */
+/* Input fields and buttons styling */
 .sidebar input, .sidebar select, .sidebar button {
     width: 100%;
-    padding: 10px;
+    padding: 12px;
     margin-bottom: 15px;
     font-size: 16px;
     border-radius: 5px;
     border: 1px solid #ddd;
+    box-sizing: border-box;
 }
 
 /* Button hover effect */
 .sidebar button {
-    background-color: #0056b3;
+    background-color: #0d47a1; /* Google Blue */
     color: white;
     cursor: pointer;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    padding: 10px;
 }
 
 .sidebar button:hover {
-    background-color: #00409b;
+    background-color: #1976d2; /* Darker Google Blue */
+}
+
+/* Title for the sidebar */
+.sidebar h3 {
+    margin-bottom: 20px;
+    color: #333;
+    font-size: 20px;
+    text-align: center;
+}
+
+/* Make sure the map container is responsive */
+#map {
+    width: 100%;
+    height: 100%;
+}
+
+/* Styling for the buttons and inputs */
+input, select {
+    background-color: #fff;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    padding: 10px;
+    font-size: 16px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+button {
+    background-color: #4285f4; /* Google Blue */
+    color: white;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    padding: 10px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #357ae8; /* Slightly darker blue */
+}
+
+/* Responsive Design */
+@media screen and (max-width: 768px) {
+    .sidebar {
+        width: 100%;
+        position: relative;
+        top: 0;
+    }
 }
