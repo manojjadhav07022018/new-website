@@ -54,11 +54,6 @@ input, select, button {
     box-sizing: border-box;
 }
 
-input:focus, select:focus, button:focus {
-    outline: none;
-    border-color: #0056b3;
-}
-
 button {
     background-color: #0056b3;
     color: white;
@@ -78,9 +73,4 @@ button:disabled {
     font-size: 16px;
     color: #333;
     margin-top: 10px;
-}
-
-label {
-    font-weight: bold;
-    margin-bottom: 5px;
 }
