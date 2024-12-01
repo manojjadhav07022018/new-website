@@ -3,24 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Professional Navigation System</title>
-    <!-- Bootstrap CSS -->
+    <title>Navigation System</title>
+
+    <!-- Bootstrap CSS for styling -->
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    
-    <!-- Leaflet CSS for Map -->
+
+    <!-- Leaflet CSS for map styling -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.1/dist/leaflet.css"/>
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css"/>
-    
-    <!-- Custom Styles -->
+
+    <!-- Custom styles -->
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-<!-- Navigation Sidebar for inputs and weather info -->
+<!-- Navigation Sidebar (for inputs and weather) -->
 <div class="sidebar p-4 bg-light shadow rounded">
     <h3 class="text-center mb-4">Navigation System</h3>
 
-    <!-- Start and End Location -->
+    <!-- Input Fields for Start and End Locations -->
     <div class="form-group">
         <label for="start">Start Location</label>
         <input type="text" id="start" class="form-control" placeholder="Enter start location">
@@ -41,15 +42,15 @@
         </select>
     </div>
 
-    <!-- Buttons to Calculate Route and Geolocate User -->
+    <!-- Buttons -->
     <div class="form-group">
         <button onclick="calculateRoute()" class="btn btn-primary btn-block">Get Route</button>
     </div>
     <div class="form-group">
         <button onclick="geolocateUser()" class="btn btn-secondary btn-block">Use My Location</button>
     </div>
-    
-    <!-- Weather Information -->
+
+    <!-- Weather Info -->
     <h5 class="mt-4">Weather Info</h5>
     <div id="weather" class="text-muted"></div>
 </div>
@@ -57,7 +58,7 @@
 <!-- Map Container -->
 <div id="map" style="height: 100vh;"></div>
 
-<!-- Include OpenCage API and OpenWeather API -->
+<!-- Include API keys (Make sure to use your actual API keys) -->
 <script src="https://api.opencagedata.com/geocode/v1/json?q=London&key=c34e29c1c3cb4633839af7cf72ab224e"></script>
 <script src="https://api.openweathermap.org/data/2.5/weather?q=London&appid=8b12ac433523f9f24fba9932331ca42e"></script>
 
@@ -66,5 +67,6 @@
 <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
 
 <script src="script.js"></script>
+
 </body>
 </html>
