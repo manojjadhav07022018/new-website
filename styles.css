@@ -1,103 +1,37 @@
-/* Reset body margin and padding */
-body, html {
-    height: 100%;
+/* Basic styling */
+html, body {
     margin: 0;
     padding: 0;
-    font-family: 'Roboto', sans-serif;
+    height: 100%;
+    font-family: Arial, sans-serif;
 }
 
-/* Full height for the map */
+/* Fullscreen map */
 #map {
-    height: 100%;
+    height: 100vh;
     width: 100%;
 }
 
-/* Sidebar for input and settings */
+/* Sidebar styling (bootstrap-based) */
 .sidebar {
     position: absolute;
     top: 20px;
     left: 20px;
-    background: rgba(255, 255, 255, 0.9);
+    background-color: rgba(255, 255, 255, 0.9);
     padding: 20px;
     border-radius: 10px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
     width: 300px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
     z-index: 1;
-    font-family: 'Arial', sans-serif;
-    box-sizing: border-box;
-    background-color: rgba(255, 255, 255, 0.9);
 }
 
-/* Input fields and buttons styling */
-.sidebar input, .sidebar select, .sidebar button {
-    width: 100%;
-    padding: 12px;
-    margin-bottom: 15px;
-    font-size: 16px;
-    border-radius: 5px;
-    border: 1px solid #ddd;
-    box-sizing: border-box;
+/* Weather section */
+#weather {
+    margin-top: 10px;
+    font-size: 14px;
 }
 
-/* Button hover effect */
-.sidebar button {
-    background-color: #0d47a1; /* Google Blue */
-    color: white;
-    cursor: pointer;
-    font-size: 16px;
-    border: none;
-    border-radius: 5px;
-    padding: 10px;
-}
-
-.sidebar button:hover {
-    background-color: #1976d2; /* Darker Google Blue */
-}
-
-/* Title for the sidebar */
-.sidebar h3 {
-    margin-bottom: 20px;
-    color: #333;
-    font-size: 20px;
-    text-align: center;
-}
-
-/* Make sure the map container is responsive */
-#map {
-    width: 100%;
-    height: 100%;
-}
-
-/* Styling for the buttons and inputs */
-input, select {
-    background-color: #fff;
-    border-radius: 5px;
-    border: 1px solid #ddd;
-    padding: 10px;
-    font-size: 16px;
-    width: 100%;
-    box-sizing: border-box;
-}
-
+/* Buttons and Form Controls */
 button {
-    background-color: #4285f4; /* Google Blue */
-    color: white;
-    font-size: 16px;
-    border: none;
-    border-radius: 5px;
-    padding: 10px;
-    cursor: pointer;
-}
-
-button:hover {
-    background-color: #357ae8; /* Slightly darker blue */
-}
-
-/* Responsive Design */
-@media screen and (max-width: 768px) {
-    .sidebar {
-        width: 100%;
-        position: relative;
-        top: 0;
-    }
+    margin-top: 10px;
 }
