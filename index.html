@@ -3,31 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OpenStreetMap - Navigation</title>
+    <title>OpenStreetMap Navigation</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div class="container">
-    <h1>OpenStreetMap - Navigation</h1>
-    
-    <!-- Location search input -->
-    <input type="text" id="location" placeholder="Enter location" />
-    <button onclick="getWeather()">Get Weather & Location</button>
-    
-    <!-- Distance calculation section -->
+<div id="map"></div>
+
+<!-- Side control panel -->
+<div class="side-panel">
+    <h1>OpenStreetMap Navigation</h1>
+    <div class="location-input">
+        <input type="text" id="location" placeholder="Enter Location" />
+        <button onclick="getWeather()">Get Weather & Location</button>
+    </div>
+
     <div class="distance-section">
-        <h3>Calculate Distance Between Locations</h3>
-        <input type="text" id="destination" placeholder="Enter destination location" />
+        <input type="text" id="destination" placeholder="Enter Destination" />
         <button onclick="calculateDistance()">Calculate Distance</button>
         <div id="distanceResult"></div>
     </div>
 
-    <!-- Transport Mode Selector -->
     <div class="transport-section">
-        <h3>Select Transport Mode</h3>
+        <label for="transportMode">Select Transport Mode</label>
         <select id="transportMode" onchange="changeTransportMode()">
             <option value="car">Car</option>
             <option value="bike">Bike</option>
@@ -36,11 +36,7 @@
         </select>
     </div>
 
-    <!-- User location button -->
     <button onclick="getUserLocation()">Use My Location</button>
-
-    <!-- Map container -->
-    <div id="map" class="map"></div>
 </div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
