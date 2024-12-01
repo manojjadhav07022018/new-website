@@ -1,128 +1,67 @@
-const OPEN_CAGE_API_KEY = 'c34e29c1c3cb4633839af7cf72ab224e';  // OpenCage API Key for location
-const OPEN_WEATHER_API_KEY = '8b12ac433523f9f24fba9932331ca42e';  // OpenWeather API Key for weather
+let map, directionsService, directionsRenderer;
+let currentTravelMode = 'DRIVING'; // Default travel mode is car
+let userLatLng = null;
 
-let map = L.map('map').setView([51.505, -0.09], 13);
-
-// Add OpenStreetMap tile layer
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-}).addTo(map);
-
-let routeControl = L.Routing.control({
-    waypoints: [],
-    routeWhileDragging: true,
-    createMarker: function() { return null; } // Avoid displaying markers
-}).addTo(map);
-
-let routeMode = 'car'; // Default route mode is car
-
-// Function to change the transport mode
-function changeTransportMode() {
-    routeMode = document.getElementById('transportMode').value;
-    updateRoute();
-}
-
-// Function to update the route based on the selected mode
-function updateRoute() {
-    const startInput = document.getElementById('location').value;
-    const endInput = document.getElementById('destination').value;
-
-    if (!startInput || !endInput) {
-        alert("Please provide both the start and destination locations.");
-        return;
-    }
-
-    // Fetch locations and update route
-    Promise.all([
-        fetch(`https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(startInput)}&key=${OPEN_CAGE_API_KEY}`),
-        fetch(`https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(endInput)}&key=${OPEN_CAGE_API_KEY}`)
-    ])
-    .then(responses => Promise.all(responses.map(response => response.json())))
-    .then(data => {
-        const start = data[0].results[0].geometry;
-        const end = data[1].results[0].geometry;
-
-        if (!start || !end) {
-            alert("Could not find one or both locations.");
-            return;
-        }
-
-        const startLat = start.lat, startLng = start.lng;
-        const endLat = end.lat, endLng = end.lng;
-
-        // Update the route using Leaflet Routing Machine
-        routeControl.setWaypoints([L.latLng(startLat, startLng), L.latLng(endLat, endLng)]);
-
-        // Change routing profile based on selected transport mode
-        routeControl.getRouter().options.profile = routeMode;
-    })
-    .catch(err => {
-        alert("Error fetching location data. Please try again.");
-        console.error(err);
+// Function to initialize the map
+function initMap() {
+    // Default map center (New York)
+    map = new google.maps.Map(document.getElementById('map'), {
+        center: { lat: 40.7128, lng: -74.0060 },
+        zoom: 13
     });
-}
 
-// Function to get the user's location and set it as the starting point
-function getUserLocation() {
+    // DirectionsService and DirectionsRenderer to handle routing
+    directionsService = new google.maps.DirectionsService();
+    directionsRenderer = new google.maps.DirectionsRenderer();
+    directionsRenderer.setMap(map);  // Display route on the map
+
+    // Try to get the user's current location and center the map on it
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(function(position) {
-            const lat = position.coords.latitude;
-            const lon = position.coords.longitude;
-
-            // Center the map on user's location
-            map.setView([lat, lon], 13);
-
-            // Add a marker at the user's location
-            L.marker([lat, lon]).addTo(map)
-                .bindPopup("You are here")
-                .openPopup();
-
-            // Update the location input field
-            document.getElementById('location').value = `Latitude: ${lat}, Longitude: ${lon}`;
-
-            // Set user's location as start point in the route
-            routeControl.spliceWaypoints(0, 1, L.latLng(lat, lon));
-        }, function(error) {
-            alert("Geolocation error: " + error.message);
+            userLatLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+            map.setCenter(userLatLng);
+        }, function() {
+            alert("Geolocation failed.");
         });
-    } else {
-        alert("Geolocation is not supported by this browser.");
     }
 }
 
-// Function to fetch and display the distance between start and destination
-function calculateRoute() {
-    const startInput = document.getElementById('location').value;
-    const endInput = document.getElementById('destination').value;
+// Change travel mode based on user input
+function changeTravelMode() {
+    currentTravelMode = document.getElementById('mode').value;
+}
 
-    if (!startInput || !endInput) {
-        alert("Please provide both the start and destination locations.");
+// Get and display the route from start to end
+function calculateRoute() {
+    const start = document.getElementById('start').value;
+    const end = document.getElementById('end').value;
+
+    if (!start || !end) {
+        alert("Please enter both start and end locations.");
         return;
     }
 
-    Promise.all([
-        fetch(`https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(startInput)}&key=${OPEN_CAGE_API_KEY}`),
-        fetch(`https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(endInput)}&key=${OPEN_CAGE_API_KEY}`)
-    ])
-    .then(responses => Promise.all(responses.map(response => response.json())))
-    .then(data => {
-        const start = data[0].results[0].geometry;
-        const end = data[1].results[0].geometry;
+    const request = {
+        origin: start,
+        destination: end,
+        travelMode: google.maps.TravelMode[currentTravelMode]
+    };
 
-        if (!start || !end) {
-            alert("Could not find one or both locations.");
-            return;
+    directionsService.route(request, function(result, status) {
+        if (status === google.maps.DirectionsStatus.OK) {
+            directionsRenderer.setDirections(result);
+        } else {
+            alert("Directions request failed due to " + status);
         }
-
-        const startLat = start.lat, startLng = start.lng;
-        const endLat = end.lat, endLng = end.lng;
-
-        routeControl.setWaypoints([L.latLng(startLat, startLng), L.latLng(endLat, endLng)]);
-
-        // Change routing profile based on selected transport mode
-        routeControl.getRouter().options.profile = routeMode;
-
-        const distance = routeControl.getRoute().summary.totalDistance / 1000;  // Convert to km
-        document.getElementById('distanceResult').innerText = `Distance: ${distance.toFixed(2)} km`;
     });
+}
+
+// Use geolocation to set the user's location as the starting point
+function geolocateUser() {
+    if (userLatLng) {
+        document.getElementById('start').value = 'Current Location';
+        calculateRoute();
+    } else {
+        alert("Unable to detect your location.");
+    }
 }
