@@ -1,56 +1,41 @@
-let map, directionsService, directionsRenderer;
-let currentTravelMode = 'DRIVING'; // Default to driving
+let map, routingMachine;
+let currentTravelMode = 'DRIVING';
 let userLatLng = null;
-
-// Google Maps styling (Professional look like Google Maps)
-const mapStyle = [
-    { "elementType": "geometry", "stylers": [{ "color": "#212121" }] },
-    { "elementType": "labels.icon", "stylers": [{ "visibility": "off" }] },
-    { "elementType": "labels.text.fill", "stylers": [{ "color": "#757575" }] },
-    { "elementType": "labels.text.stroke", "stylers": [{ "color": "#212121" }] },
-    { "featureType": "administrative", "elementType": "geometry", "stylers": [{ "color": "#757575" }] },
-    { "featureType": "administrative.country", "elementType": "labels.text.fill", "stylers": [{ "color": "#9e9e9e" }] },
-    { "featureType": "landscape.man_made", "elementType": "geometry.fill", "stylers": [{ "color": "#6b6b6b" }] },
-    { "featureType": "landscape.natural", "elementType": "geometry.fill", "stylers": [{ "color": "#8e8e8e" }] },
-    { "featureType": "poi", "elementType": "geometry", "stylers": [{ "color": "#2e2e2e" }] },
-    { "featureType": "poi", "elementType": "labels.text.fill", "stylers": [{ "color": "#8a8a8a" }] },
-    { "featureType": "road", "elementType": "geometry", "stylers": [{ "color": "#5c5c5c" }] },
-    { "featureType": "road.arterial", "elementType": "geometry", "stylers": [{ "color": "#5c5c5c" }] },
-    { "featureType": "road.local", "elementType": "geometry", "stylers": [{ "color": "#5c5c5c" }] },
-    { "featureType": "transit", "elementType": "geometry", "stylers": [{ "color": "#5c5c5c" }] },
-    { "featureType": "transit.station", "elementType": "labels.text.fill", "stylers": [{ "color": "#8a8a8a" }] },
-    { "featureType": "water", "elementType": "geometry.fill", "stylers": [{ "color": "#3a3a3a" }] }
-];
 
 // Initialize the map
 function initMap() {
-    map = new google.maps.Map(document.getElementById('map'), {
-        center: { lat: 40.7128, lng: -74.0060 }, // Default: New York City
-        zoom: 13,
-        styles: mapStyle // Apply professional styling
-    });
+    map = L.map('map').setView([51.505, -0.09], 13);  // Default location: London
 
-    directionsService = new google.maps.DirectionsService();
-    directionsRenderer = new google.maps.DirectionsRenderer();
-    directionsRenderer.setMap(map);
+    // Custom Map Tile Layer (OpenStreetMap)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-    // If geolocation is supported, center the map based on user's location
+    // Routing Machine for calculating routes
+    routingMachine = L.Routing.control({
+        waypoints: [],
+        routeWhileDragging: true,
+        createMarker: function() { return null; } // Disable marker for route
+    }).addTo(map);
+}
+
+// Geolocation functionality
+function geolocateUser() {
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(function(position) {
-            userLatLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
-            map.setCenter(userLatLng);
-        }, function() {
-            alert("Geolocation failed.");
+            userLatLng = [position.coords.latitude, position.coords.longitude];
+            map.setView(userLatLng, 13);  // Center map to user location
+            L.marker(userLatLng).addTo(map).bindPopup('You are here').openPopup();
         });
+    } else {
+        alert("Geolocation not supported.");
     }
 }
 
-// Change the travel mode (car, bike, walk, public transport)
+// Change travel mode (car, walking, bike, transit)
 function changeTravelMode() {
     currentTravelMode = document.getElementById('mode').value;
 }
 
-// Calculate and display the route
+// Calculate route between start and end locations
 function calculateRoute() {
     const start = document.getElementById('start').value;
     const end = document.getElementById('end').value;
@@ -60,31 +45,37 @@ function calculateRoute() {
         return;
     }
 
-    const request = {
-        origin: start,
-        destination: end,
-        travelMode: google.maps.TravelMode[currentTravelMode]
-    };
+    // Use OpenCage Geocoding API to convert locations to latitude and longitude
+    fetch(`https://api.opencagedata.com/geocode/v1/json?q=${start}&key=c34e29c1c3cb4633839af7cf72ab224e`)
+        .then(response => response.json())
+        .then(data => {
+            const startCoords = data.results[0].geometry;
+            const startLatLng = [startCoords.lat, startCoords.lng];
 
-    directionsService.route(request, function(result, status) {
-        if (status === google.maps.DirectionsStatus.OK) {
-            directionsRenderer.setDirections(result);
-        } else {
-            alert("Directions request failed due to " + status);
-        }
-    });
-}
+            fetch(`https://api.opencagedata.com/geocode/v1/json?q=${end}&key=c34e29c1c3cb4633839af7cf72ab224e`)
+                .then(response => response.json())
+                .then(data => {
+                    const endCoords = data.results[0].geometry;
+                    const endLatLng = [endCoords.lat, endCoords.lng];
 
-// Use user's current location to set the start point
-function geolocateUser() {
-    if (userLatLng) {
-        const geocoder = new google.maps.Geocoder();
-        geocoder.geocode({ 'location': userLatLng }, function(results, status) {
-            if (status === 'OK' && results[0]) {
-                document.getElementById('start').value = results[0].formatted_address;
-            }
+                    // Set waypoints and get directions
+                    routingMachine.setWaypoints([startLatLng, endLatLng]);
+
+                    // Fetch weather for destination
+                    getWeather(endCoords.lat, endCoords.lng);
+                });
         });
-    } else {
-        alert("Unable to retrieve your location.");
-    }
 }
+
+// Fetch weather info for destination
+function getWeather(lat, lon) {
+    fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=8b12ac433523f9f24fba9932331ca42e`)
+        .then(response => response.json())
+        .then(data => {
+            const weather = `Weather: ${data.weather[0].description}<br>Temperature: ${Math.round(data.main.temp - 273.15)}°C`;
+            document.getElementById('weather').innerHTML = weather;
+        });
+}
+
+// Initialize map when the page loads
+window.onload = initMap;
