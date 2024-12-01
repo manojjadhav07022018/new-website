@@ -3,32 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OpenStreetMap - Like Google Maps</title>
-    <!-- Include Leaflet CSS -->
+    <title>OpenStreetMap - Navigation</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-    <!-- Include Leaflet Routing Machine CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
-    <!-- Custom CSS for styling -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <div class="container">
-    <h1>OpenStreetMap - Like Google Maps</h1>
+    <h1>OpenStreetMap - Navigation</h1>
     
     <!-- Location search input -->
     <input type="text" id="location" placeholder="Enter location" />
     <button onclick="getWeather()">Get Weather & Location</button>
-
-    <!-- Weather result display -->
-    <div id="weatherResult"></div>
-
+    
     <!-- Distance calculation section -->
     <div class="distance-section">
         <h3>Calculate Distance Between Locations</h3>
         <input type="text" id="destination" placeholder="Enter destination location" />
         <button onclick="calculateDistance()">Calculate Distance</button>
         <div id="distanceResult"></div>
+    </div>
+
+    <!-- Transport Mode Selector -->
+    <div class="transport-section">
+        <h3>Select Transport Mode</h3>
+        <select id="transportMode" onchange="changeTransportMode()">
+            <option value="car">Car</option>
+            <option value="bike">Bike</option>
+            <option value="walk">Walk</option>
+            <option value="publicTransport">Public Transport</option>
+        </select>
     </div>
 
     <!-- User location button -->
@@ -38,11 +43,8 @@
     <div id="map" class="map"></div>
 </div>
 
-<!-- Include Leaflet JS -->
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-<!-- Include Leaflet Routing Machine JS -->
 <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
-<!-- Custom JavaScript for functionality -->
 <script src="script.js"></script>
 
 </body>
