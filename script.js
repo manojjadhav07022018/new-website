@@ -157,9 +157,6 @@ function getUserLocation() {
             L.marker([lat, lon]).addTo(map)
                 .bindPopup("You are here")
                 .openPopup();
-
-            // Update routing control with the user's location as the starting point
-            routeControl.spliceWaypoints(0, 1, L.latLng(lat, lon));
         });
     } else {
         alert("Geolocation is not supported by this browser.");
