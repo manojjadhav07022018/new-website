@@ -1,96 +1,138 @@
-const openWeatherAPIKey = '8b12ac433523f9f24fba9932331ca42e'; // Replace with your OpenWeatherMap API key
-const openCageAPIKey = 'c34e29c1c3cb4633839af7cf72ab224e'; // Replace with your OpenCage API key
+const OPEN_CAGE_API_KEY = 'c34e29c1c3cb4633839af7cf72ab224e';
+const OPEN_WEATHER_API_KEY = '8b12ac433523f9f24fba9932331ca42e';
 
-function getWeatherData() {
-    const locationInput = document.getElementById("locationInput").value;
+// Initialize the Leaflet map
+let map = L.map('map').setView([51.505, -0.09], 13);
 
-    // Validate input
-    if (!locationInput) {
-        showError("Please enter a valid location.");
+// Tile layer for the map
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+// Initialize the routing control
+let routeControl = L.Routing.control({
+    waypoints: [],
+    routeWhileDragging: true
+}).addTo(map);
+
+// Function to get weather and location information
+async function getWeather() {
+    const locationInput = document.getElementById('location').value;
+    const weatherResult = document.getElementById('weatherResult');
+
+    if (locationInput === '') {
+        alert("Please enter a location.");
         return;
     }
 
-    // Hide previous results and error messages
-    document.getElementById("locationData").style.display = 'none';
-    document.getElementById("error-message").style.display = 'none';
+    // Fetch location data from OpenCage API
+    const locationResponse = await fetch(`https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(locationInput)}&key=${OPEN_CAGE_API_KEY}`);
+    const locationData = await locationResponse.json();
 
-    // Clear previous weather details
-    resetWeatherDetails();
+    if (locationData.results.length === 0) {
+        weatherResult.innerHTML = 'Location not found. Please try again.';
+        return;
+    }
 
-    // Fetch location data (latitude, longitude)
-    fetch(`https://api.opencagedata.com/geocode/v1/json?q=${locationInput}&key=${openCageAPIKey}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.results && data.results.length > 0) {
-                const location = data.results[0];
-                const lat = location.geometry.lat;
-                const lng = location.geometry.lng;
-                const formattedAddress = location.formatted;
+    const { lat, lng } = locationData.results[0].geometry;
+    const city = locationData.results[0].formatted;
 
-                document.getElementById("formattedAddress").textContent = `Address: ${formattedAddress}`;
-                document.getElementById("latitude").textContent = lat;
-                document.getElementById("longitude").textContent = lng;
-                document.getElementById("country").textContent = location.components.country || 'N/A';
-                document.getElementById("city").textContent = location.components.city || 'N/A';
-                document.getElementById("state").textContent = location.components.state || 'N/A';
+    // Fetch weather data from OpenWeather API
+    const weatherResponse = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lng}&appid=${OPEN_WEATHER_API_KEY}&units=metric`);
+    const weatherData = await weatherResponse.json();
 
-                // Fetch weather data
-                fetchWeatherData(lat, lng);
-            } else {
-                showError("Location not found.");
-            }
-        })
-        .catch(error => showError("Error fetching location data."));
+    if (weatherData.cod !== 200) {
+        weatherResult.innerHTML = 'Weather information not available.';
+        return;
+    }
 
+    // Display weather information
+    weatherResult.innerHTML = `
+        <h2>Weather in ${city}</h2>
+        <p><strong>Temperature:</strong> ${weatherData.main.temp}°C</p>
+        <p><strong>Humidity:</strong> ${weatherData.main.humidity}%</p>
+        <p><strong>Weather:</strong> ${weatherData.weather[0].description}</p>
+        <p><strong>Wind Speed:</strong> ${weatherData.wind.speed} m/s</p>
+    `;
+
+    // Update map with location marker
+    map.setView([lat, lng], 13);
+    L.marker([lat, lng]).addTo(map)
+        .bindPopup(`<b>${city}</b><br>Latitude: ${lat}, Longitude: ${lng}`)
+        .openPopup();
+
+    // Update the routing control with the new location as a starting point
+    routeControl.spliceWaypoints(0, 1, L.latLng(lat, lng));
 }
 
-function fetchWeatherData(lat, lng) {
-    fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lng}&appid=${openWeatherAPIKey}&units=metric`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.weather && data.main) {
-                const weather = data.weather[0];
-                const main = data.main;
-                const wind = data.wind;
-                const sys = data.sys;
-                const clouds = data.clouds;
+// Function to calculate distance between two locations
+function calculateDistance() {
+    const locationInput = document.getElementById('location').value;
+    const destinationInput = document.getElementById('destination').value;
+    const distanceResult = document.getElementById('distanceResult');
 
-                document.getElementById("weatherDescription").textContent = `Weather: ${weather.description}`;
-                document.getElementById("temperature").textContent = `Temperature: ${main.temp}°C (Min: ${main.temp_min}°C, Max: ${main.temp_max}°C)`;
-                document.getElementById("humidity").textContent = `Humidity: ${main.humidity}%`;
-                document.getElementById("windSpeed").textContent = `Wind Speed: ${wind.speed} m/s`;
-                document.getElementById("pressure").textContent = `Pressure: ${main.pressure} hPa`;
-                document.getElementById("cloudiness").textContent = `Cloudiness: ${clouds.all}%`;
-                document.getElementById("sunrise").textContent = `Sunrise: ${new Date(sys.sunrise * 1000).toLocaleTimeString()}`;
-                document.getElementById("sunset").textContent = `Sunset: ${new Date(sys.sunset * 1000).toLocaleTimeString()}`;
-                
-                // Weather icon
-                document.getElementById("weatherIcon").src = `https://openweathermap.org/img/wn/${weather.icon}.png`;
+    if (locationInput === '' || destinationInput === '') {
+        alert("Please enter both locations.");
+        return;
+    }
 
-                // Show data
-                document.getElementById("locationData").style.display = 'block';
-            } else {
-                showError("Weather data not available for this location.");
-            }
-        })
-        .catch(error => showError("Error fetching weather data."));
+    // Fetch location data for both the starting and destination locations
+    Promise.all([
+        fetch(`https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(locationInput)}&key=${OPEN_CAGE_API_KEY}`),
+        fetch(`https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(destinationInput)}&key=${OPEN_CAGE_API_KEY}`)
+    ])
+    .then(responses => Promise.all(responses.map(response => response.json())))
+    .then(data => {
+        const start = data[0].results[0].geometry;
+        const end = data[1].results[0].geometry;
+
+        if (!start || !end) {
+            distanceResult.innerHTML = "One or both locations not found.";
+            return;
+        }
+
+        const startLat = start.lat, startLng = start.lng;
+        const endLat = end.lat, endLng = end.lng;
+
+        // Calculate the distance using the Haversine formula (in km)
+        const R = 6371; // Radius of Earth in km
+        const dLat = (endLat - startLat) * Math.PI / 180;
+        const dLng = (endLng - startLng) * Math.PI / 180;
+        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                  Math.cos(startLat * Math.PI / 180) * Math.cos(endLat * Math.PI / 180) *
+                  Math.sin(dLng / 2) * Math.sin(dLng / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        const distance = R * c; // Distance in km
+
+        distanceResult.innerHTML = `Distance between locations: ${distance.toFixed(2)} km`;
+
+        // Update the routing control with both locations
+        routeControl.setWaypoints([
+            L.latLng(startLat, startLng),
+            L.latLng(endLat, endLng)
+        ]);
+    })
+    .catch(err => {
+        distanceResult.innerHTML = "Error calculating distance.";
+    });
 }
 
-// Show error message
-function showError(message) {
-    document.getElementById("error-message").style.display = 'block';
-    document.getElementById("error-message").textContent = message;
-}
+// Function to get user's geolocation and center the map
+function getUserLocation() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(position => {
+            const { latitude, longitude } = position.coords;
 
-// Reset weather details section
-function resetWeatherDetails() {
-    document.getElementById("weatherDescription").textContent = '';
-    document.getElementById("temperature").textContent = '';
-    document.getElementById("humidity").textContent = '';
-    document.getElementById("windSpeed").textContent = '';
-    document.getElementById("pressure").textContent = '';
-    document.getElementById("cloudiness").textContent = '';
-    document.getElementById("sunrise").textContent = '';
-    document.getElementById("sunset").textContent = '';
-    document.getElementById("weatherIcon").src = '';
+            map.setView([latitude, longitude], 13);
+
+            L.marker([latitude, longitude]).addTo(map)
+                .bindPopup("You are here")
+                .openPopup();
+
+            // Update routing control with the user's location
+            routeControl.spliceWaypoints(0, 1, L.latLng(latitude, longitude));
+        }, error => {
+            alert("Error getting location: " + error.message);
+        });
+    } else {
+        alert("Geolocation is not supported by this browser.");
+    }
 }
