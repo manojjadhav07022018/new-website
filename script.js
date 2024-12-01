@@ -10,7 +10,8 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 
 let routeControl = L.Routing.control({
     waypoints: [],
-    routeWhileDragging: true
+    routeWhileDragging: true,
+    createMarker: function() { return null; } // Avoid displaying markers
 }).addTo(map);
 
 let routeMode = 'car'; // Default route mode is car
@@ -54,6 +55,10 @@ function updateRoute() {
 
         // Change routing profile based on selected transport mode
         routeControl.getRouter().options.profile = routeMode;
+    })
+    .catch(err => {
+        alert("Error fetching location data. Please try again.");
+        console.error(err);
     });
 }
 
@@ -77,8 +82,47 @@ function getUserLocation() {
 
             // Set user's location as start point in the route
             routeControl.spliceWaypoints(0, 1, L.latLng(lat, lon));
+        }, function(error) {
+            alert("Geolocation error: " + error.message);
         });
     } else {
         alert("Geolocation is not supported by this browser.");
     }
+}
+
+// Function to fetch and display the distance between start and destination
+function calculateRoute() {
+    const startInput = document.getElementById('location').value;
+    const endInput = document.getElementById('destination').value;
+
+    if (!startInput || !endInput) {
+        alert("Please provide both the start and destination locations.");
+        return;
+    }
+
+    Promise.all([
+        fetch(`https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(startInput)}&key=${OPEN_CAGE_API_KEY}`),
+        fetch(`https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(endInput)}&key=${OPEN_CAGE_API_KEY}`)
+    ])
+    .then(responses => Promise.all(responses.map(response => response.json())))
+    .then(data => {
+        const start = data[0].results[0].geometry;
+        const end = data[1].results[0].geometry;
+
+        if (!start || !end) {
+            alert("Could not find one or both locations.");
+            return;
+        }
+
+        const startLat = start.lat, startLng = start.lng;
+        const endLat = end.lat, endLng = end.lng;
+
+        routeControl.setWaypoints([L.latLng(startLat, startLng), L.latLng(endLat, endLng)]);
+
+        // Change routing profile based on selected transport mode
+        routeControl.getRouter().options.profile = routeMode;
+
+        const distance = routeControl.getRoute().summary.totalDistance / 1000;  // Convert to km
+        document.getElementById('distanceResult').innerText = `Distance: ${distance.toFixed(2)} km`;
+    });
 }
