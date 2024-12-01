@@ -1,11 +1,13 @@
-const OPEN_CAGE_API_KEY = 'c34e29c1c3cb4633839af7cf72ab224e';
-const OPEN_WEATHER_API_KEY = '8b12ac433523f9f24fba9932331ca42e';
+const OPEN_CAGE_API_KEY = 'c34e29c1c3cb4633839af7cf72ab224e';  // OpenCage API Key for location
+const OPEN_WEATHER_API_KEY = '8b12ac433523f9f24fba9932331ca42e';  // OpenWeather API Key for weather
 
-// Initialize the Leaflet map
+// Initialize the map using Leaflet
 let map = L.map('map').setView([51.505, -0.09], 13);
 
-// Tile layer for the map
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+// Add OpenStreetMap tile layer
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+}).addTo(map);
 
 // Initialize the routing control
 let routeControl = L.Routing.control({
@@ -102,35 +104,31 @@ function calculateDistance() {
         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         const distance = R * c; // Distance in km
 
-        distanceResult.innerHTML = `Distance between locations: ${distance.toFixed(2)} km`;
+        // Display the distance result
+        distanceResult.innerHTML = `Distance between ${locationInput} and ${destinationInput} is ${distance.toFixed(2)} km.`;
 
-        // Update the routing control with both locations
-        routeControl.setWaypoints([
-            L.latLng(startLat, startLng),
-            L.latLng(endLat, endLng)
-        ]);
-    })
-    .catch(err => {
-        distanceResult.innerHTML = "Error calculating distance.";
+        // Plot the route between the two locations on the map
+        routeControl.setWaypoints([L.latLng(startLat, startLng), L.latLng(endLat, endLng)]);
     });
 }
 
-// Function to get user's geolocation and center the map
+// Function to get user's current location
 function getUserLocation() {
     if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(position => {
-            const { latitude, longitude } = position.coords;
+        navigator.geolocation.getCurrentPosition(function(position) {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
 
-            map.setView([latitude, longitude], 13);
+            // Center the map on user's location
+            map.setView([lat, lon], 13);
 
-            L.marker([latitude, longitude]).addTo(map)
+            // Add a marker at the user's location
+            L.marker([lat, lon]).addTo(map)
                 .bindPopup("You are here")
                 .openPopup();
 
-            // Update routing control with the user's location
-            routeControl.spliceWaypoints(0, 1, L.latLng(latitude, longitude));
-        }, error => {
-            alert("Error getting location: " + error.message);
+            // Update routing control with the user's location as the starting point
+            routeControl.spliceWaypoints(0, 1, L.latLng(lat, lon));
         });
     } else {
         alert("Geolocation is not supported by this browser.");
