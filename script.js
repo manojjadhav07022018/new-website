@@ -13,104 +13,28 @@ let routeControl = L.Routing.control({
     routeWhileDragging: true
 }).addTo(map);
 
-// Default mode: car
-let routeMode = 'car';
+let routeMode = 'car'; // Default route mode is car
 
-// Function to get weather and location information
-async function getWeather() {
-    const locationInput = document.getElementById('location').value;
-    const weatherResult = document.getElementById('weatherResult');
-
-    if (locationInput === '') {
-        alert("Please enter a location.");
-        return;
-    }
-
-    // Fetch location data from OpenCage API
-    const locationResponse = await fetch(`https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(locationInput)}&key=${OPEN_CAGE_API_KEY}`);
-    const locationData = await locationResponse.json();
-
-    if (locationData.results.length === 0) {
-        weatherResult.innerHTML = 'Location not found. Please try again.';
-        return;
-    }
-
-    const { lat, lng } = locationData.results[0].geometry;
-    const city = locationData.results[0].formatted;
-
-    // Fetch weather data from OpenWeather API
-    const weatherResponse = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lng}&appid=${OPEN_WEATHER_API_KEY}&units=metric`);
-    const weatherData = await weatherResponse.json();
-
-    if (weatherData.cod !== 200) {
-        weatherResult.innerHTML = 'Weather information not available.';
-        return;
-    }
-
-    // Display weather information
-    weatherResult.innerHTML = `
-        <h2>Weather in ${city}</h2>
-        <p><strong>Temperature:</strong> ${weatherData.main.temp}°C</p>
-        <p><strong>Humidity:</strong> ${weatherData.main.humidity}%</p>
-        <p><strong>Weather:</strong> ${weatherData.weather[0].description}</p>
-        <p><strong>Wind Speed:</strong> ${weatherData.wind.speed} m/s</p>
-    `;
-
-    // Update map with location marker
-    map.setView([lat, lng], 13);
-    L.marker([lat, lng]).addTo(map)
-        .bindPopup(`<b>${city}</b><br>Latitude: ${lat}, Longitude: ${lng}`)
-        .openPopup();
-
-    // Update the routing control with the new location as a starting point
-    routeControl.spliceWaypoints(0, 1, L.latLng(lat, lng));
-}
-
-// Function to change transport mode
+// Function to change the transport mode
 function changeTransportMode() {
     routeMode = document.getElementById('transportMode').value;
     updateRoute();
 }
 
-// Function to update route based on the selected mode of transport
+// Function to update the route based on the selected mode
 function updateRoute() {
-    // Define the available routing profiles for car, bike, walk
-    let routeProfiles = {
-        'car': 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-        'bike': 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-        'walk': 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-    };
+    const startInput = document.getElementById('location').value;
+    const endInput = document.getElementById('destination').value;
 
-    // Clear existing waypoints
-    routeControl.setWaypoints([]);
-
-    // If the mode is car, bike, or walk, we add routing
-    if (routeMode === 'car' || routeMode === 'bike' || routeMode === 'walk') {
-        L.Routing.control({
-            waypoints: [L.latLng(51.505, -0.09), L.latLng(51.515, -0.1)],
-            router: L.Routing.osrmv1({
-                profile: routeMode
-            }),
-            routeWhileDragging: true
-        }).addTo(map);
-    }
-}
-
-// Function to calculate distance between two locations
-function calculateDistance() {
-    const locationInput = document.getElementById('location').value;
-    const destinationInput = document.getElementById('destination').value;
-    const distanceResult = document.getElementById('distanceResult');
-
-    if (locationInput === '' || destinationInput === '') {
-        alert("Please enter both locations.");
+    if (!startInput || !endInput) {
+        alert("Please provide both the start and destination locations.");
         return;
     }
 
-    // Fetch location data for both the starting and destination locations
+    // Fetch locations and update route
     Promise.all([
-        fetch(`https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(locationInput)}&key=${OPEN_CAGE_API_KEY}`),
-        fetch(`https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(destinationInput)}&key=${OPEN_CAGE_API_KEY}`)
+        fetch(`https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(startInput)}&key=${OPEN_CAGE_API_KEY}`),
+        fetch(`https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(endInput)}&key=${OPEN_CAGE_API_KEY}`)
     ])
     .then(responses => Promise.all(responses.map(response => response.json())))
     .then(data => {
@@ -118,32 +42,22 @@ function calculateDistance() {
         const end = data[1].results[0].geometry;
 
         if (!start || !end) {
-            distanceResult.innerHTML = "One or both locations not found.";
+            alert("Could not find one or both locations.");
             return;
         }
 
         const startLat = start.lat, startLng = start.lng;
         const endLat = end.lat, endLng = end.lng;
 
-        // Calculate the distance using the Haversine formula (in km)
-        const R = 6371; // Radius of Earth in km
-        const dLat = (endLat - startLat) * Math.PI / 180;
-        const dLng = (endLng - startLng) * Math.PI / 180;
-        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                  Math.cos(startLat * Math.PI / 180) * Math.cos(endLat * Math.PI / 180) *
-                  Math.sin(dLng / 2) * Math.sin(dLng / 2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        const distance = R * c; // Distance in km
-
-        // Display the distance result
-        distanceResult.innerHTML = `Distance between ${locationInput} and ${destinationInput} is ${distance.toFixed(2)} km.`;
-
-        // Plot the route between the two locations on the map
+        // Update the route using Leaflet Routing Machine
         routeControl.setWaypoints([L.latLng(startLat, startLng), L.latLng(endLat, endLng)]);
+
+        // Change routing profile based on selected transport mode
+        routeControl.getRouter().options.profile = routeMode;
     });
 }
 
-// Function to get user's current location
+// Function to get the user's location and set it as the starting point
 function getUserLocation() {
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(function(position) {
@@ -157,6 +71,12 @@ function getUserLocation() {
             L.marker([lat, lon]).addTo(map)
                 .bindPopup("You are here")
                 .openPopup();
+
+            // Update the location input field
+            document.getElementById('location').value = `Latitude: ${lat}, Longitude: ${lon}`;
+
+            // Set user's location as start point in the route
+            routeControl.spliceWaypoints(0, 1, L.latLng(lat, lon));
         });
     } else {
         alert("Geolocation is not supported by this browser.");
